@@ -3,7 +3,11 @@ import pandas as pd
 import re
 import nltk
 nltk.download('punkt')
+nltk.download('stopwords')
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+port = PorterStemmer()
 raw_data = pd.read_csv('tweets_labelled_09042020_16072020.csv', sep=";")
 print('The shape of the raw data:', raw_data.shape)
 #print(raw_data.head(10))
@@ -42,6 +46,27 @@ def remove_characters(data):
         new_data.append(new_tweet)
     return new_data
 
+def remove_stopwords(data):
+    new_data = []
+    for tweet in data:
+        new_tweet = []
+        for word in tweet:
+            if not word in stopwords.words('english'):
+                new_tweet.append(word)
+        new_data.append(new_tweet)
+    return new_data
+
+def stemming(data):
+    new_data = []
+    for tweet in data:
+        new_tweet = []
+        for word in tweet:
+            new_tweet.append(port.stem(word))
+        new_data.append(new_tweet)
+    return new_data
+
+
+#####This is just to check if I don't fuck up the data#####
 print('Step 0 shape:', len(raw_text_short))
 print(raw_text_short[:3])
 print('\n\n\n')
@@ -55,5 +80,13 @@ print(data[:3])
 print('\n\n\n')
 data = remove_characters(data)
 print('Step 3 shape:', len(data))
+print(data[:3])
+print('\n\n\n')
+data = remove_stopwords(data)
+print('Step 4 shape:', len(data))
+print(data[:3])
+print('\n\n\n')
+data = stemming(data)
+print('Step 5 shape:', len(data))
 print(data[:3])
 print('\n\n\n')
