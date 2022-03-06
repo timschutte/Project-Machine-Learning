@@ -11,7 +11,7 @@ port = PorterStemmer()
 raw_data = pd.read_csv('tweets_labelled_09042020_16072020.csv', sep=";")
 print('The shape of the raw data:', raw_data.shape)
 #print(raw_data.head(10))
-raw_text_short = raw_data['text'][:30]
+raw_text_short = raw_data['text']
 #print(raw_text_short.shape)
 #print(raw_text_short[:5])
 
@@ -66,6 +66,7 @@ def stemming(data):
     return new_data
 
 
+
 #####This is just to check if I don't fuck up the data#####
 print('Step 0 shape:', len(raw_text_short))
 print(raw_text_short[:3])
@@ -90,3 +91,13 @@ data = stemming(data)
 print('Step 5 shape:', len(data))
 print(data[:3])
 print('\n\n\n')
+
+######  Word2Vec  ########
+import gensim
+model = gensim.models.Word2Vec(
+    window = 3,
+    min_count=2
+)
+model.build_vocab(data)
+model.train(data, total_examples=model.corpus_count, epochs=5)
+model.save("./fullDataset_model.model")
