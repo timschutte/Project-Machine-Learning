@@ -10,11 +10,9 @@ from nltk.stem.porter import PorterStemmer
 port = PorterStemmer()
 raw_data = pd.read_csv('tweets_labelled_09042020_16072020.csv', sep=";")
 print('The shape of the raw data:', raw_data.shape)
-#print(raw_data.head(10))
 raw_text_short = raw_data['text']
-#print(raw_text_short.shape)
-#print(raw_text_short[:5])
 
+##### Preprocessing functions #####
 def lower_case(data):
     new_data = []
     for tweet in data:
@@ -65,10 +63,10 @@ def stemming(data):
         new_data.append(new_tweet)
     return new_data
 
+###################################################################
+################# Actual Preprocessing ############################
+#####The print statements to check if I don't fuck up the data#####
 
-
-#####This is just to check if I don't fuck up the data#####
-"""
 print('Step 0 shape:', len(raw_text_short))
 print(raw_text_short[:3])
 print('\n\n\n')
@@ -92,9 +90,11 @@ data = stemming(data)
 print('Step 5 shape:', len(data))
 print(data[:3])
 print('\n\n\n')
-"""
+
+
+
 ### Hyperparameters ###
-def longest_tweet(tweets):
+def longest_tweet(tweets):      #To check for the longest sentence in the dataset
     maxLen = 0
     for tweet in tweets:
         if len(tweet) > maxLen:
@@ -106,6 +106,8 @@ vectorSize = 100
 maxLen = 50
 
 ######  Word2Vec  ########
+
+# creating a vector representation of the words in the dataset
 import gensim
 """
 model = gensim.models.Word2Vec(
@@ -115,22 +117,31 @@ model = gensim.models.Word2Vec(
 )
 model.build_vocab(data)
 model.train(data, total_examples=model.corpus_count, epochs=5)
-word_vectors = model.vw
 model.save("./fullDataset_model.model")
 """
 model = gensim.models.Word2Vec.load("fullDataset_model.model")
 word_vectors = model.wv
 
-#### Preprocessing the dataset ####
+###### Converting a natural language sentence into a vector representation suitable for the keras network
 
-def language_to_vectors(sentence, vector_size=vectorSize, maxLen=maxLen):
+def lan_to_vec_sentence(sentence, vector_size=vectorSize, maxLen=maxLen):
     vec_sentence = np.zeros((maxLen, vector_size))
     for i in range(min([len(sentence), maxLen])):
-        if word_vectors[sentence[i]] is not None:
+        try:
             vec_sentence[i] = word_vectors[sentence[i]]
+        except KeyError:
+            continue
     return vec_sentence
 
+def lan_to_vec_dataset(dataset, vector_size=vectorSize, maxLen=maxLen):
+    vec_dataset = np.zeros((len(dataset), maxLen, vector_size))
+    for i in range(len(dataset)):
+        vec_dataset[i] = lan_to_vec_sentence(dataset[i], vector_size=vector_size, maxLen=maxLen)
+    return vec_dataset
 
+vectorized = lan_to_vec_dataset(data[:10])
+print(vectorized.shape, '\n\n\n')
+print(vectorized[:2])
 
 """
 keyedvectors = gensim.models.KeyedVectors.load("fullDataset_model.model", mmap='r')
