@@ -120,20 +120,36 @@ model.save("./fullDataset_model.model")
 """
 model = gensim.models.Word2Vec.load("fullDataset_model.model")
 word_vectors = model.wv
-print(type(word_vectors))
-print(word_vectors.items[0])
-vocab_len = len(word_vectors)
 
 #### Preprocessing the dataset ####
-emb_matrix = np.zeros((vocab_len, vectorSize))
 
+def language_to_vectors(sentence, vector_size=vectorSize, maxLen=maxLen):
+    vec_sentence = np.zeros((maxLen, vector_size))
+    for i in range(min([len(sentence), maxLen])):
+        if word_vectors[sentence[i]] is not None:
+            vec_sentence[i] = word_vectors[sentence[i]]
+    return vec_sentence
+
+
+
+"""
+keyedvectors = gensim.models.KeyedVectors.load("fullDataset_model.model", mmap='r')
+embedding_matrix = np.zeros((vocab_len + 1, vectorSize))
+print(type(keyedvectors[0]))
+print(keyedvectors[0])
+for word, i in word_vectors.word_to_key:
+    embedding_vector = word_index.get(word)
+    if embedding_vector is not None:
+        # words not found in embedding index will be all-zeros.
+        embedding_matrix[i] = embedding_vector
+"""
 #### LSTM Model ####
 """
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Softmax
 from keras.layers.embeddings import Embedding
-embedding_layer = Embedding(input_dim=vocab_len, output_dim=vectorSize, input_length=maxLen, weights = [emb_matrix], trainable=False)
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+embedding_layer = Embedding(input_dim=vocab_len, output_dim=vectorSize, input_length=maxLen, weights = [embedding_matrix], trainable=False)
 
 lstm_model = Sequential()
-lstm_model.add()
 """
