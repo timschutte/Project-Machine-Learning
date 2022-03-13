@@ -68,6 +68,7 @@ def stemming(data):
 
 
 #####This is just to check if I don't fuck up the data#####
+"""
 print('Step 0 shape:', len(raw_text_short))
 print(raw_text_short[:3])
 print('\n\n\n')
@@ -91,13 +92,48 @@ data = stemming(data)
 print('Step 5 shape:', len(data))
 print(data[:3])
 print('\n\n\n')
+"""
+### Hyperparameters ###
+def longest_tweet(tweets):
+    maxLen = 0
+    for tweet in tweets:
+        if len(tweet) > maxLen:
+            maxLen = len(tweet)
+    return maxLen
+    
+windowSize = 5
+vectorSize = 100
+maxLen = 50
 
 ######  Word2Vec  ########
 import gensim
+"""
 model = gensim.models.Word2Vec(
-    window = 3,
-    min_count=2
+    window = windowSize,
+    min_count=2,
+    vector_size = vectorSize
 )
 model.build_vocab(data)
 model.train(data, total_examples=model.corpus_count, epochs=5)
+word_vectors = model.vw
 model.save("./fullDataset_model.model")
+"""
+model = gensim.models.Word2Vec.load("fullDataset_model.model")
+word_vectors = model.wv
+print(type(word_vectors))
+print(word_vectors.items[0])
+vocab_len = len(word_vectors)
+
+#### Preprocessing the dataset ####
+emb_matrix = np.zeros((vocab_len, vectorSize))
+
+#### LSTM Model ####
+"""
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import LSTM, Softmax
+from keras.layers.embeddings import Embedding
+embedding_layer = Embedding(input_dim=vocab_len, output_dim=vectorSize, input_length=maxLen, weights = [emb_matrix], trainable=False)
+
+lstm_model = Sequential()
+lstm_model.add()
+"""
