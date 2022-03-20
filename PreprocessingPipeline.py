@@ -45,8 +45,9 @@ class PreprocessPipeline():
 
     def removeNanValues(self):
         nan_values = self.mapNanValues()
-        self.X_raw, self.y_raw = self.X_raw.drop(nan_values), self.y_raw.drop(nan_values)
-        self.X_raw, self.y_raw = self.X_raw.reset_index(drop=True), self.y_raw.reset_index(drop=True)  
+        if len(nan_values) > 0:
+            self.X_raw, self.y_raw = self.X_raw.drop(nan_values), self.y_raw.drop(nan_values)
+            self.X_raw, self.y_raw = self.X_raw.reset_index(drop=True), self.y_raw.reset_index(drop=True)  
 
     def lowercase(self):
         new_data = []
@@ -62,6 +63,7 @@ class PreprocessPipeline():
                 new_data.append(new_line)
             except TypeError:
                 self.typeErrors.append(str(type(line)) + '    ' +  str(line))
+        print(self.typeErrors)
         self.X = new_data
 
     def remove_characters(self):
@@ -124,11 +126,11 @@ class PreprocessPipeline():
     
     def to2demensions(self):
         dimension = self.X.shape
-        return self.X.reshape((dimension[0]*dimension[1], dimension[2])), dimension
+        return self.X.reshape((dimension[0]*dimension[1], dimension[2]))
 
     def save_data(self):
-        pd.DataFrame(self.y).to_csv('/preprocessedY.csv')
-        pd.DataFrame(self.to2demensions[0]).to_csv('/preprocessedX.csv')
+        pd.DataFrame(self.y).to_csv('preprocessedY.csv')
+        pd.DataFrame(self.to2demensions()).to_csv('preprocessedX.csv')
         mapping = 'The following indexes in the y vectors encode for the following classes:'
         for index, value in self.y_mapping.items():
             mapping += '\n'+ str(index) + ' : ' + str(value)
@@ -145,17 +147,14 @@ class PreprocessPipeline():
         self.removeNanValues()
         self.lowercase()
         self.tokenize()
-        print(len(self.typeErrors))
-        print(self.typeErrors)
         self.remove_characters()
         self.remove_stopwords()
-        self.tokenize()
         self.stemming()
         self.lan_to_vec_dataset()
         self.vectorizeY()
 
 data = pd.read_csv('Twitter_Data.csv')
-x, y = data['clean_text'], data['category']
+x, y = data['clean_text'][:100], data['category'][:100]
 pipeline = PreprocessPipeline(X_raw=x, y_raw=y)
 pipeline.load_w2v('tweets_w2v_2.model')
 pipeline.unprocessed_to_vector()
