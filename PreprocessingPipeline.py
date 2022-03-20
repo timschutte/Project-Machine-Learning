@@ -116,7 +116,32 @@ class PreprocessPipeline():
                 if self.y_raw[i] == value:
                     self.y[i][index] = 1.0
                     break
+    
+    def to2demensions(self):
+        dimension = self.X.shape
+        return self.X.reshape((dimension[0]*dimension[1], dimension[2])), dimension
+
+    def save_data(self):
+        pd.DataFrame(self.y).to_csv('/preprocessedY.csv')
+        pd.DataFrame(self.to2demensions[0]).to_csv('/preprocessedX.csv')
+        mapping = 'The following indexes in the y vectors encode for the following classes:'
+        for index, value in self.y_mapping.items():
+            mapping += '\n'+ str(index) + ' : ' + str(value)
+        text_file = open("mapping.txt", "w")
+        text_file.write(mapping)
+        text_file.close()
+
 
     def train_test_split(self, test_size=0.3):
-        X_train, X_test, y_train, y_test = model_selection.train_test_split(self.X, self.y, test_size=0.33, random_state=35)
+        X_train, X_test, y_train, y_test = model_selection.train_test_split(self.X, self.y, test_size=test_size, random_state=35)
         self.X, self.y = {'train':X_train, 'test':X_test}, {'train':y_train, 'test':y_test}
+
+    def unprocessed_to_vector(self):
+        self.mapNanValues()
+        self.lowercase()
+        self.tokenize()
+        self.remove_characters()
+        self.tokenize()
+        self.stemming()
+        self.lan_to_vec_dataset()
+        self.vectorizeY()
