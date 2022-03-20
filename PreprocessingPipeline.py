@@ -11,6 +11,7 @@ import gensim
 from sklearn import model_selection
 
 class PreprocessPipeline():
+
     def __init__(self, X_raw=None, y_raw=None, language='english', stemmer='snowball', w2v_model=None, maxSequenceLength=70):
         self.X_raw = X_raw
         self.y_raw = y_raw
@@ -145,3 +146,8 @@ class PreprocessPipeline():
         self.stemming()
         self.lan_to_vec_dataset()
         self.vectorizeY()
+
+data = pd.DataFrame.read_csv('/Twitter_Data.csv')
+x, y = data['clean_text'], data['category']
+pipeline = PreprocessPipeline(X_raw=x, y_raw=y)
+pipeline.load_w2v()
