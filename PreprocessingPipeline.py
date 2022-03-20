@@ -18,11 +18,11 @@ class PreprocessPipeline():
         self.language = language
 
         if stemmer == 'snowball':
-            self.stemmer = stemmers.SnowballStemmer()
+            self.stemmer = stemmers.SnowballStemmer(language)
         elif stemmer == 'porter':
-            self.stemmer = stemmers.PorterStemmer()
+            self.stemmer = stemmers.PorterStemmer(language)
         elif stemmer == 'lancaster':
-            self.stemmer = stemmers.LancasterStemmer()
+            self.stemmer = stemmers.LancasterStemmer(language)
         else:
             raise "The stemmer you entered is not recognized. The following keywords are supported:\n'snowball'\n'porter'\n'lancaster'"
         
@@ -31,6 +31,7 @@ class PreprocessPipeline():
         self.y = None
         self.y_mapping = None
         self.maxLen = maxSequenceLength
+        self.typeErrors = []
 
     def load_w2v(self, path):
         self.w2v_model = gensim.models.Word2Vec.load(path)
@@ -43,7 +44,7 @@ class PreprocessPipeline():
         return nan_values
 
     def removeNanValues(self):
-        nan_values = self.mapNanValues
+        nan_values = self.mapNanValues()
         self.X_raw, self.y_raw = self.X_raw.drop(nan_values), self.y_raw.drop(nan_values)
         self.X_raw, self.y_raw = self.X_raw.reset_index(drop=True), self.y_raw.reset_index(drop=True)  
 
@@ -56,14 +57,17 @@ class PreprocessPipeline():
     def tokenize(self):
         new_data = []
         for line in self.X:
-            line = word_tokenize(line)
-            new_data.append(line)
+            try:
+                new_line = word_tokenize(line)
+                new_data.append(new_line)
+            except TypeError:
+                self.typeErrors.append(str(type(line)) + '    ' +  str(line))
         self.X = new_data
 
     def remove_characters(self):
         new_data = []
         if type(self.X[0]) != list:
-            raise "The first item of data is of type ", type(self.X[0]), ' the data is probably not tokenized yet.'
+            raise "The first item of data is of type " + str(type(self.X[0])) + ' the data is probably not tokenized yet.'
         for tweet in self.X:
             new_tweet = []
             for word in tweet:
@@ -138,16 +142,21 @@ class PreprocessPipeline():
         self.X, self.y = {'train':X_train, 'test':X_test}, {'train':y_train, 'test':y_test}
 
     def unprocessed_to_vector(self):
-        self.mapNanValues()
+        self.removeNanValues()
         self.lowercase()
         self.tokenize()
+        print(len(self.typeErrors))
+        print(self.typeErrors)
         self.remove_characters()
+        self.remove_stopwords()
         self.tokenize()
         self.stemming()
         self.lan_to_vec_dataset()
         self.vectorizeY()
 
-data = pd.DataFrame.read_csv('/Twitter_Data.csv')
+data = pd.read_csv('Twitter_Data.csv')
 x, y = data['clean_text'], data['category']
 pipeline = PreprocessPipeline(X_raw=x, y_raw=y)
-pipeline.load_w2v()
+pipeline.load_w2v('tweets_w2v_2.model')
+pipeline.unprocessed_to_vector()
+pipeline.save_data()
