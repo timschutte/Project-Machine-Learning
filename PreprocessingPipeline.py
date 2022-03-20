@@ -42,7 +42,8 @@ class PreprocessPipeline():
         return nan_values
 
     def removeNanValues(self):
-        self.X_raw, self.y_raw = self.X_raw.drop(self.mapNanValues()) self.y_raw.drop(self.mapNanValues())
+        nan_values = self.mapNanValues
+        self.X_raw, self.y_raw = self.X_raw.drop(nan_values), self.y_raw.drop(nan_values)
         self.X_raw, self.y_raw = self.X_raw.reset_index(drop=True), self.y_raw.reset_index(drop=True)  
 
     def lowercase(self):
@@ -58,7 +59,7 @@ class PreprocessPipeline():
             new_data.append(line)
         self.X = new_data
 
-    def remove_characters(self.X):
+    def remove_characters(self):
         new_data = []
         if type(self.X[0]) != list:
             raise "The first item of data is of type ", type(self.X[0]), ' the data is probably not tokenized yet.'
