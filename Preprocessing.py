@@ -155,12 +155,15 @@ for word, i in word_vectors.word_to_key:
         embedding_matrix[i] = embedding_vector
 """
 #### LSTM Model ####
-"""
+
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Softmax
-from keras.layers.embeddings import Embedding
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-embedding_layer = Embedding(input_dim=vocab_len, output_dim=vectorSize, input_length=maxLen, weights = [embedding_matrix], trainable=False)
+from tensorflow.keras.layers import LSTM, Dense, Softmax
+###from keras.layers.embeddings import Embedding
+###from tensorflow.keras.preprocessing.sequence import pad_sequences
+###embedding_layer = Embedding(input_dim=vocab_len, output_dim=vectorSize, input_length=maxLen, weights = [embedding_matrix], trainable=False)
 
 lstm_model = Sequential()
-"""
+lstm_model.add(LSTM(64, input_shape=(maxLen, vectorSize), return_sequences=True))
+lstm_model.add(LSTM(128, return_sequences=False))
+lstm_model.add(Dense(32))
+lstm_model.add(Softmax(3))
