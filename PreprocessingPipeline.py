@@ -12,7 +12,7 @@ from sklearn import model_selection
 
 class PreprocessPipeline():
 
-    def __init__(self, X_raw=None, y_raw=None, language='english', stemmer='snowball', w2v_model=None, maxSequenceLength=70):
+    def __init__(self, X_raw=None, y_raw=None, language='english', stemmer='snowball', w2v_model=None, maxSequenceLength=40):
         self.X_raw = X_raw
         self.y_raw = y_raw
         self.language = language
@@ -143,6 +143,14 @@ class PreprocessPipeline():
         X_train, X_test, y_train, y_test = model_selection.train_test_split(self.X, self.y, test_size=test_size, random_state=35)
         self.X, self.y = {'train':X_train, 'test':X_test}, {'train':y_train, 'test':y_test}
 
+    def unprocessed_to_unembedded(self):
+        self.removeNanValues()
+        self.tokenize()
+        self.remove_characters()
+        self.remove_stopwords()
+        self.stemming()
+        self.vectorizeY()
+
     def unprocessed_to_vector(self):
         self.removeNanValues()
         self.lowercase()
@@ -151,11 +159,11 @@ class PreprocessPipeline():
         self.remove_stopwords()
         self.stemming()
         self.lan_to_vec_dataset()
-        self.vectorizeY()
+        return self.X
 
 data = pd.read_csv('Twitter_Data.csv')
-x, y = data['clean_text'][:100], data['category'][:100]
+x, y = data['clean_text'], data['category']
 pipeline = PreprocessPipeline(X_raw=x, y_raw=y)
-pipeline.load_w2v('tweets_w2v_2.model')
-pipeline.unprocessed_to_vector()
-pipeline.save_data()
+# pipeline.load_w2v('tweets_w2v_2.model')
+# pipeline.unprocessed_to_vector()
+# pipeline.save_data()
