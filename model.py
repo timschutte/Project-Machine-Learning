@@ -20,10 +20,23 @@ def mapNanValues(data):
             nan_values.append(i)
     return nan_values
 
-X = pd.read_csv('Twitter_Data.csv')
-X = X['clean_text']
+
+data = pd.read_csv('Twitter_Data.csv')
+X = data['clean_text']
 X = X.drop(mapNanValues(X)).reset_index()
-y = pd.read_csv('preprocessedY.csv', index_col=0)
+y = data['category']
+y = y.drop(mapNanValues(X)).reset_index()
+zeros = np.zeros((len(y), 3))
+##### One Hot labels ####
+for i in range(len(y)):
+    if y[i] == -1:
+        zeros[i][0] = 1
+    elif y[i] == 0:
+        zeros[i][1] = 1
+    elif y[i] == 1:
+        zeros[i][2] = 1
+
+
 X = X[:100]
 y = y[:100]
 #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=35)
@@ -42,17 +55,17 @@ METRICS = [
 # X = np.array(X).reshape((int(dim[0]/40), 40, 100))
 
 
-def Vanilla_LSTM():
-    lstm_model = Sequential()
-    lstm_model.add(LSTM(64, input_shape=(40, 100), return_sequences=True))
-    lstm_model.add(LSTM(128, return_sequences=False))
-    lstm_model.add(Dense(32))
-    lstm_model.add(Dense(3))
-    lstm_model.add(Softmax(input_shape=[0., 0., 0.]))
-    print('\n\nmodel built')
-    lstm_model.compile(loss=CategoricalCrossentropy(), optimizer=Adam(0.01))
-    print('\n\nmodel compiled')
-    lstm_model.fit(x=X_train, y=y_train, batch_size=5, epochs=10, verbose=1, validation_split=0.1)
+# def Vanilla_LSTM():
+#     lstm_model = Sequential()
+#     lstm_model.add(LSTM(64, input_shape=(40, 100), return_sequences=True))
+#     lstm_model.add(LSTM(128, return_sequences=False))
+#     lstm_model.add(Dense(32))
+#     lstm_model.add(Dense(3))
+#     lstm_model.add(Softmax(input_shape=[0., 0., 0.]))
+#     print('\n\nmodel built')
+#     lstm_model.compile(loss=CategoricalCrossentropy(), optimizer=Adam(0.01))
+#     print('\n\nmodel compiled')
+#     lstm_model.fit(x=X_train, y=y_train, batch_size=5, epochs=10, verbose=1, validation_split=0.1)
 
 def Homemade_LSTM():
     preprocessor = PreprocessPipeline()
