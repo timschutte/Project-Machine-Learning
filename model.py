@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Sequential, Model
+from tensorflow.keras import Model
 from tensorflow.keras.layers import LSTM, Dense, Softmax, Dropout, Input, Embedding
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.losses import CategoricalCrossentropy
@@ -11,7 +11,7 @@ from tensorflow.keras.preprocessing.text import one_hot
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import tensorflow_hub as hub
 import tensorflow_text as text
-from PreprocessingPipeline import PreprocessPipeline
+#from PreprocessingPipeline import PreprocessPipeline
 
 def mapNanValues(data):
     nan_values = []
@@ -25,7 +25,7 @@ data = pd.read_csv('Twitter_Data.csv')
 X = data['clean_text']
 X = X.drop(mapNanValues(X)).reset_index()
 y = data['category']
-y = y.drop(mapNanValues(X)).reset_index()
+y = y.drop(mapNanValues(y)).reset_index()
 zeros = np.zeros((len(y), 3))
 ##### One Hot labels ####
 for i in range(len(y)):
@@ -39,6 +39,7 @@ for i in range(len(y)):
 
 X = X[:100]
 y = y[:100]
+print('data opgehaald')
 #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=35)
 
 if X.shape[0] != y.shape[0]:
@@ -68,9 +69,8 @@ METRICS = [
 #     lstm_model.fit(x=X_train, y=y_train, batch_size=5, epochs=10, verbose=1, validation_split=0.1)
 
 def Homemade_LSTM():
-    preprocessor = PreprocessPipeline()
     text_input = Input(shape=(), dtype=tf.string, name='text')
-    preprocessed = preprocessor(X_raw=text_input).unprocessed_to_vector()
+    preprocessed = PreprocessPipeline(X_raw=text_input).unprocessed_to_vector()
     l = LSTM(128, shape=(40, 100), activation='relu', return_sequences=True)(preprocessed)
     l = Dropout(0.1)(l)
     l = LSTM(128, activation='relu', return_sequences=False)(l)
@@ -87,36 +87,36 @@ def Bert_LSTM():
     text_input = Input(shape=(), dtype=tf.string, name='text')
     preprocessed_text = bert_preprocess(text_input)
     outputs = bert_encoder(preprocessed_text)
-    l = LSTM(128, shape=(40, 100), activation='relu', return_sequences=True)(outputs['pooled_output'])
-    l = Dropout(0.1)(l)
-    l = LSTM(128, activation='relu', return_sequences=False)(l)
+    #l = LSTM(128, input_shape=(40, 100), activation='relu', return_sequences=True)(outputs['pooled_output'])
+    l = Dropout(0.1)(outputs['pooled_output'])
+    l = Dense(128, activation='relu')(l)
     l = Dropout(0.1)(l)
     l = Dense(32)(l)
-    output = Softmax(3)(l)
+    output = Softmax(input_shape=(1, 1, 1))(l)
     model = Model(inputs=[text_input], outputs = [output])
     return model
 
 def Trainable_Embedding_LSTM():
-    text_input = Input(shape=(), dtype=tf.string, name='text')
+    text_input = Input(shape=(), dtype=str, name='text')
     intencoding = one_hot(text_input, 999)
     padded = pad_sequences(intencoding, maxlen=40, padding='post')
-    l = Embedding(input_dim=999, output_dim=100, input_length=40)
-    l = LSTM(128, shape=(40, 100), activation='relu', return_sequences=True)(l)
+    l = Embedding(input_dim=999, output_dim=100, input_length=40)(padded)
+    l = LSTM(128, input_shape=(40, 100), activation='relu', return_sequences=True)(l)
     l = Dropout(0.1)(l)
     l = LSTM(128, activation='relu', return_sequences=False)(l)
     l = Dropout(0.1)(l)
     l = Dense(32)(l)
-    output = Softmax(3)(l)
+    output = Softmax(input_shape=(1, 1, 1))(l)
     model = Model(inputs=[text_input], outputs = [output])
     return model
 
 
-model1 = Homemade_LSTM()
+#model1 = Homemade_LSTM()
 model2 = Bert_LSTM()
 model3 = Trainable_Embedding_LSTM()
 
-model1.compile(optimizer='adam', loss='categorical_crossentropy', metrics=METRICS)
-model1.fit(X, y, batch_size = 10, verbose=1)
+#model1.compile(optimizer='adam', loss='categorical_crossentropy', metrics=METRICS)
+#model1.fit(X, y, batch_size = 10, verbose=1)
 
 model2.compile(optimizer='adam', loss='categorical_crossentropy', metrics=METRICS)
 model2.fit(X, y, batch_size = 10, verbose=1)
