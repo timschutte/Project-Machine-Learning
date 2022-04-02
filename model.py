@@ -16,16 +16,17 @@ import tensorflow_text as text
 def mapNanValues(data):
     nan_values = []
     for i in range(len(data)):
-        if type(data) is not str:
+        if data[i] == float('NaN'):
             nan_values.append(i)
-    return nan_values
+    return nan_values 
 
 
 data = pd.read_csv('Twitter_Data.csv')
 X = data['clean_text']
-X = X.drop(mapNanValues(X)).reset_index()
 y = data['category']
-y = y.drop(mapNanValues(y)).reset_index()
+values = mapNanValues(X)
+y = y.drop(index=values).reset_index(drop=True)
+X = X.drop(index=values).reset_index(drop=True)
 zeros = np.zeros((len(y), 3))
 ##### One Hot labels ####
 for i in range(len(y)):
@@ -35,7 +36,7 @@ for i in range(len(y)):
         zeros[i][1] = 1
     elif y[i] == 1:
         zeros[i][2] = 1
-
+y = zeros
 
 X = X[:100]
 y = y[:100]
@@ -75,8 +76,7 @@ def Homemade_LSTM():
     l = Dropout(0.1)(l)
     l = LSTM(128, activation='relu', return_sequences=False)(l)
     l = Dropout(0.1)(l)
-    l = Dense(32)(l)
-    output = Softmax(3)(l)
+    output = Dense(3, activation='softmax')(l)
     model = Model(inputs=[text_input], outputs = [output])
     return model
  
@@ -92,7 +92,7 @@ def Bert_LSTM():
     l = Dense(128, activation='relu')(l)
     l = Dropout(0.1)(l)
     l = Dense(32)(l)
-    output = Softmax(input_shape=(1, 1, 1))(l)
+    output = Dense(3, activation='softmax')
     model = Model(inputs=[text_input], outputs = [output])
     return model
 
